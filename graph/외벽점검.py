@@ -10,68 +10,38 @@
 Approach 1:
 - DFS + Backtracking: Timeout for the 2nd test case
 => Condition check within the while loop
+
+Approach 2:
+- Permutations of distances, iterating start point
 """
+
+from itertools import permutations
+
+
+def _check_availability(len_weak: int, weak: list[int], dist: list[int]) -> bool:
+    weak_idx = 0
+    for d in dist:
+        end_point = weak[weak_idx] + d
+
+        while weak[weak_idx] <= end_point:
+            weak_idx += 1
+            if weak_idx == len_weak:
+                return True
+
+    return False
 
 
 def solution(n, weak, dist):
-    INF = float('inf')
-    required_friends = INF
-    repaired_bitmask = 1
     len_weak = len(weak)
-    len_dist = len(dist)
+    for friend_count in range(1, len(dist) + 1):
+        for friend_prmt in permutations(dist, friend_count):
+            current_weak = weak
+            for idx in range(len_weak):
+                availble = _check_availability(
+                    len_weak, current_weak, friend_prmt)
+                if availble:
+                    return friend_count
 
-    for i in range(1, len_weak):
-        repaired_bitmask |= (1 << i)
+                current_weak = weak[idx:] + [w + n for w in weak[:idx]]
 
-    def allocate_friends(
-        weak_idx: int, weak_bitmask: int, dist_bitmask_str: str
-    ):
-        nonlocal required_friends
-        friend_count = dist_bitmask_str.count("1")
-        
-        if weak_bitmask == repaired_bitmask:
-            required_friends = min(required_friends, friend_count)
-            return
-
-        if friend_count >= required_friends:
-            return
-
-        for dist_idx, dist_bitmask in enumerate(dist_bitmask_str):
-            if dist_bitmask == "1":
-                continue
-
-            new_dist_bitmask_str = (
-                dist_bitmask_str[:dist_idx]
-                + "1"
-                + dist_bitmask_str[dist_idx + 1:]
-            )
-            dist_start = weak[weak_idx]
-            dist_end = (weak[weak_idx] + dist[dist_idx]) % n
-
-            new_weak_bitmask = weak_bitmask
-            new_weak_idx = weak_idx
-            while (
-                (weak[new_weak_idx] >= dist_start
-                 and weak[new_weak_idx] <= dist_end)
-                or (dist_start > dist_end
-                    and weak[new_weak_idx] >= dist_start
-                    and weak[new_weak_idx] <= n)
-                or (
-                    dist_start > dist_end
-                    and weak[new_weak_idx] >= 0
-                    and weak[new_weak_idx] <= dist_end
-                )
-            ):
-                new_weak_bitmask |= (1 << new_weak_idx)
-                new_weak_idx = (new_weak_idx + 1) % len_weak
-                # Condition check within the while loop
-                if new_weak_bitmask == repaired_bitmask:
-                    break
-
-            allocate_friends(new_weak_idx, new_weak_bitmask,
-                             new_dist_bitmask_str)
-
-    for weak_idx in range(len_weak):
-        allocate_friends(weak_idx, 0, "0" * len_dist)
-
-    return required_friends if required_friends < INF else -1
+    return -1
