@@ -28,11 +28,8 @@ def solution(n, weak, dist):
     ):
         nonlocal required_friends
         friend_count = dist_bitmask_str.count("1")
-        print(
-            f"dist_bitmask_str: {dist_bitmask_str}, weak_bitmask: {weak_bitmask}")
-
+        
         if weak_bitmask == repaired_bitmask:
-            print(f"dist_bitmask_str: {dist_bitmask_str}")
             required_friends = min(required_friends, friend_count)
             return
 
