@@ -12,46 +12,35 @@
 - Issues
 1. current_capacity > capacity인 경우 고려해야 함
 2. 부분적 수거도 처리
+3. delivery/pickup이 필요 없는 집들 제외
+
+===
+Solution:
+
+1. 가장 먼 미처리 주택은 무조건 가야함 -> 배달/수거 물량을 기반으로 왕복 횟수 계산
+2. 가장 먼 주택 처리 후 남는 용적량으로 할 수 있는 처리를 더 가까운 주택들의 상태로 반영
+- 그리디를 떠올렸지만 수학적으로 최적화할 수 있는 방법 존재
 """
 
+from math import ceil
 
 def solution(capacity: int, num_house: int, deliveries: list[int], pickups: list[int]):
-    remaining_num_house = num_house
+    remain_delivery = 0
+    remain_pickup = 0
+
     total_distance = 0
 
-    while remaining_num_house:
-        current_capacity, required_box = capacity, 0
-        total_distance += remaining_num_house
-        for house_idx in range(remaining_num_house - 1, -1, -1):
-            # print(f"house_idx: {house_idx}, status: {[(d, p) for d, p in zip(deliveries, pickups)]}")
-            delivered_all, picked_all = False, False
-            if current_capacity == 0:
-                break
+    for house_idx in range(num_house - 1, -1, -1):
+        remain_delivery += deliveries[house_idx]
+        remain_pickup += pickups[house_idx]
 
-            current_required_box = deliveries[house_idx]
-            current_required_empty = pickups[house_idx]
+        max_remain = max(remain_delivery, remain_pickup)
+        if max_remain <= 0:
+            continue
 
-            # 더 줄 수 있음
-            if capacity - required_box >= 0:
-                delivered_box = min(current_required_box,
-                                    capacity - required_box)
-                current_capacity += delivered_box
-                deliveries[house_idx] -= delivered_box
-                if deliveries[house_idx] == 0:
-                    delivered_all = True
-                required_box += delivered_box
+        trip_count = ceil(max_remain / capacity)
+        remain_delivery -= capacity * trip_count
+        remain_pickup -= capacity * trip_count
+        total_distance += 2 * (trip_count * (house_idx + 1))
 
-            # 더 주울 수 있음
-            if current_capacity >= current_required_empty:
-                current_capacity -= current_required_empty
-                pickups[house_idx] -= current_required_empty
-                if pickups[house_idx] == 0:
-                    picked_all = True
-
-            # print(f"house_idx2: {house_idx}, status: {[(d, p) for d, p in zip(deliveries, pickups)]}")
-            if not (delivered_all and picked_all):
-                break
-
-            remaining_num_house -= 1
-
-    return total_distance * 2
+    return total_distance
