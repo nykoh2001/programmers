@@ -26,12 +26,7 @@ def solution(node_weights: list[int], edges: list[int, int]) -> int:
 
         edge_idx_list = list(edge_idx_set)
         if not edge_idx_list:
-            # print(f"nodes_with_single_edge: {nodes_with_single_edge}")
-            # print(f"total_count: {total_count}")
-            # print(f"node:{node}")
-            # print(f"edges_per_node:{edges_per_node}")
-            # print("??????")
-            return total_count if total_count else -1
+            continue
 
         edge_idx = edge_idx_list[0]
         for n in edges[edge_idx]:
