@@ -1,3 +1,9 @@
+"""https://school.programmers.co.kr/learn/courses/30/lessons/64062
+
+- 2개 test case에 대해 시간초과
+- 최적화 방안 -
+"""
+
 from math import ceil
 
 
