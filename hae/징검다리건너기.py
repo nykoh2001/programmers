@@ -2,30 +2,27 @@
 
 - 2개 test case에 대해 시간초과
 - 최적화 방안 -
+  - Binary search에서 비효율적인 부분이 있을 것이라고 생각했지만, 
+    더 간단하게 건널 수 있는지 확인하는 방법이 있었음
+    - 마찬가지로 시뮬레이션을 수학적으로 최적화
 """
 
 from math import ceil
 
 
 def solution(stones: list[int], jump: int):
-
     def _check_if_pass(friends: int) -> bool:
-        stone_idx = -1
-        while stone_idx + 1 < len(stones):
-            if stones[stone_idx + 1] >= friends:
-                stone_idx += 1
+        broken = 0
+        for stone in stones:
+            if stone < friends:
+                broken += 1
+
+                if broken >= jump:
+                    return False
+
                 continue
 
-            if stone_idx + jump >= len(stones):
-                return True
-
-            for jump_idx in range(stone_idx + 1, stone_idx + jump + 1):
-                if stones[jump_idx] >= friends:
-                    stone_idx = jump_idx
-                    break
-
-                if jump_idx == stone_idx + jump:
-                    return False
+            broken = 0
 
         return True
 
