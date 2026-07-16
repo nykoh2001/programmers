@@ -1,6 +1,6 @@
 """https://school.programmers.co.kr/learn/courses/30/lessons/76503"""
 
-from collections import defaultdict
+from collections import defaultdict, deque
 
 
 def solution(node_weights: list[int], edges: list[int, int]) -> int:
@@ -10,19 +10,30 @@ def solution(node_weights: list[int], edges: list[int, int]) -> int:
         edges_per_node[node1].add(edge_idx)
         edges_per_node[node2].add(edge_idx)
 
-    nodes_by_edge_count = defaultdict(set)
+    nodes_with_single_edge = deque()
+
     for node, edge_idx_set in edges_per_node.items():
-        nodes_by_edge_count[len(edge_idx_set)].add(node)
+        if len(edge_idx_set) == 1:
+            nodes_with_single_edge.append(node)
 
     total_count = 0
     edge_used = [False] * len(edges)
 
-    while not all(edge_used):
-        node = list(nodes_by_edge_count[1])[0]
+    while nodes_with_single_edge:
+        node = nodes_with_single_edge.popleft()
         edge_idx_set = edges_per_node[node]
         node_weight = node_weights[node]
 
-        edge_idx = list(edge_idx_set)[0]
+        edge_idx_list = list(edge_idx_set)
+        if not edge_idx_list:
+            # print(f"nodes_with_single_edge: {nodes_with_single_edge}")
+            # print(f"total_count: {total_count}")
+            # print(f"node:{node}")
+            # print(f"edges_per_node:{edges_per_node}")
+            # print("??????")
+            return total_count if total_count else -1
+
+        edge_idx = edge_idx_list[0]
         for n in edges[edge_idx]:
             if n == node:
                 node_weights[n] -= node_weight
@@ -31,8 +42,8 @@ def solution(node_weights: list[int], edges: list[int, int]) -> int:
 
             edge_count = len(edges_per_node[n])
             edges_per_node[n].remove(edge_idx)
-            nodes_by_edge_count[edge_count].remove(n)
-            nodes_by_edge_count[edge_count - 1].add(n)
+            if len(edges_per_node[n]) == 1:
+                nodes_with_single_edge.append(n)
 
         total_count += abs(node_weight)
         edge_used[edge_idx] = True
