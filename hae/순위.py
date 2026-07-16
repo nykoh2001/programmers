@@ -24,14 +24,13 @@ def solution(num_boxer: int, results: list[list[int]]) -> int:
             losers = flatten_dependency(loser)
             flatten_losers.update(losers)
 
-        flatten_losers.update(winning_games[boxer_id])
+        winning_games[boxer_id].update(flatten_losers)
 
-        return flatten_losers
+        return winning_games[boxer_id]
 
     for boxer_id in range(1, num_boxer + 1):
         flatten_winning = flatten_dependency(boxer_id)
 
-        winning_games[boxer_id].update(flatten_winning)
         for loser in flatten_winning:
             losing_games[loser].add(boxer_id)
 
