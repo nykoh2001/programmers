@@ -1,8 +1,16 @@
-"""https://school.programmers.co.kr/learn/courses/30/lessons/49191"""
+"""https://school.programmers.co.kr/learn/courses/30/lessons/49191
+
+visited를 처리함 << 다른 상태들도 모두 그에 맞게 반영이 되어 있어야 함
+
+Approaches:
+1. DFS
+2. Set Propagation
+3. Floyd Warshall
+"""
 
 from collections import defaultdict
 
-
+# 1. Appraoch 1: DFS
 def solution(num_boxer: int, results: list[list[int]]) -> int:
     fixed_ranker_count = 0
 
