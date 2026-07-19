@@ -2,13 +2,13 @@
 
 1. DFS, Greedy: 3 runtime error, 1 timeout
 2. Stack, Greedy: Fail for last test case
+3. Stack, Greedy: Handle edge case (k > 0)
 """
 
 from collections import deque
 
 
 def solution(number: str, k: int):
-    INF = 1_000_001
     number_stack = deque()
     last_idx = len(number)
 
@@ -18,10 +18,8 @@ def solution(number: str, k: int):
             number_stack.append(int_num)
             continue
 
-        top_element = number_stack[-1] if number_stack else INF
-        while number_stack and top_element < int_num and k > 0:
+        while number_stack and number_stack[-1] < int_num and k > 0:
             number_stack.pop()
-            top_element = number_stack[-1] if number_stack else INF
             k -= 1
         number_stack.append(int_num)
 
@@ -29,4 +27,9 @@ def solution(number: str, k: int):
             last_idx = i + 1
             break
 
-    return "".join(list(map(str, number_stack))) + number[last_idx:]
+    result = "".join(list(map(str, number_stack))) + number[last_idx:]
+
+    if k > 0:
+        return result[:-k]
+
+    return result
