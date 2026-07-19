@@ -1,34 +1,32 @@
 """https://school.programmers.co.kr/learn/courses/30/lessons/42883
 
 1. DFS, Greedy: 3 runtime error, 1 timeout
+2. Stack, Greedy: Fail for last test case
 """
 
+from collections import deque
+
+
 def solution(number: str, k: int):
-    numbers_to_select = len(number) - k
-    selected_idx = set()
+    INF = 1_000_001
+    number_stack = deque()
+    last_idx = len(number)
 
-    def select_first_max_idx(start: int, end: int) -> int | None:
-        nonlocal selected_idx, number
+    for i, n in enumerate(number):
+        int_num = int(n)
+        if not number_stack:
+            number_stack.append(int_num)
+            continue
 
-        if start >= end or len(selected_idx) == numbers_to_select:
-            return
+        top_element = number_stack[-1] if number_stack else INF
+        while number_stack and top_element < int_num and k > 0:
+            number_stack.pop()
+            top_element = number_stack[-1] if number_stack else INF
+            k -= 1
+        number_stack.append(int_num)
 
-        max_number, max_idx = 0, start
+        if k == 0:
+            last_idx = i + 1
+            break
 
-        for idx in range(start, end):
-            if int(number[idx]) > max_number:
-                max_number = int(number[idx])
-                max_idx = idx
-
-        selected_idx.add(max_idx)
-
-        select_first_max_idx(max_idx + 1, end)
-        select_first_max_idx(start, max_idx)
-
-    select_first_max_idx(0, len(number))
-
-    selected_number = ""
-    for idx in sorted(list(selected_idx)):
-        selected_number += number[idx]
-
-    return selected_number
+    return "".join(list(map(str, number_stack))) + number[last_idx:]
