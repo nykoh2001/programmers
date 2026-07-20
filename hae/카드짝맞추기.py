@@ -1,119 +1,96 @@
-"""https://school.programmers.co.kr/learn/courses/30/lessons/72415
+"""Permutation + BFS"""
 
-- 어떤 카드를 먼저 제거하느냐에 따라 최소 비용이 달라질 수 있음
-    => 모든 카드 제거 순서에 대해 탐색
-- 카드1 -> 카드2 최소 거리 계산 반복
-"""
-
-from itertools import permutations
-from collections import deque
-
-DR_DC = [[-1, 0], [1, 0], [0, -1], [0, 1]]
+from collections import defaultdict, deque
+from itertools import permutations, product
 
 
-def get_distance_to_target_card(board, start_row, start_col, target_card, skip=None):
-    cell_to_visit = deque([[start_row, start_col]])
-    visited = set((start_row, start_col))
-    distance = [[0 for _ in range(4)] for _ in range(4)]
-
-    def find_adjacent_cells(r, c) -> list:
-        def is_in_boundary(r, c):
-            if r >= 0 and r < 4 and c >= 0 and c < 4:
-                return True
-            return False
-
-        adjacent_cells = set()
-        for dr, dc in DR_DC:
-            new_row = r + dr
-            new_col = c + dc
-
-            if is_in_boundary(new_row, new_col):
-                adjacent_cells.add((new_row, new_col))
-
-        new_row = r + 1
-        while is_in_boundary(new_row, c):
-            if board[new_row][c] > 0:
-                adjacent_cells.add((new_row, c))
-                break
-            new_row += 1
-
-        new_row = r - 1
-        while is_in_boundary(new_row, c):
-            if board[new_row][c] > 0:
-                adjacent_cells.add((new_row, c))
-                break
-            new_row -= 1
-
-        new_col = c + 1
-        while is_in_boundary(r, new_col):
-            if board[r][new_col] > 0:
-                adjacent_cells.add((r, new_col))
-                break
-            new_col += 1
-
-        new_col = c - 1
-        while is_in_boundary(r, new_col):
-            if board[r][new_col] > 0:
-                adjacent_cells.add((r, new_col))
-                break
-            new_col -= 1
-
-        return list(adjacent_cells)
-
-    while cell_to_visit:
-        row, col = cell_to_visit.popleft()
-
-        adjacent_cells = find_adjacent_cells(row, col)
-        for ac in adjacent_cells:
-            if ac in visited:
+def solution(board: list[list[int]], r: int, c: int) -> int:
+    # 카드 위치 정보 정의
+    card_deck = defaultdict(list)
+    for row in range(0, 4):
+        for col in range(0, 4):
+            card_num = board[row][col]
+            if card_num == 0:
                 continue
+            card_deck[card_num].append((row, col))
 
-            cell_to_visit.append(ac)
-            visited.add(ac)
-            new_distance = distance[row][col] + 1
-            next_row, next_col = ac
-            if board[next_row][next_col] == target_card and (next_row, next_col) != skip:
-                return [next_row, next_col, new_distance]
+    # 카드를 방문할 경로들 정의
+    card_set_ordering = permutations(card_deck, len(card_deck))
+    card_pair_ordering = list(product([0, 1], repeat=len(card_deck)))
 
-            distance[next_row][next_col] = new_distance
+    card_visit_ordering = []
+    for set_ordering in card_set_ordering:
+        for pair_ordering in card_pair_ordering:
+            ordering = []
+            for s, p in zip(set_ordering, pair_ordering):
+                ordering.append(card_deck[s][p])
+                ordering.append(card_deck[s][abs(p - 1)])
+            card_visit_ordering.append(ordering)
 
+    # BFS 탐색 시 필요한 인접한 셀들 구하는 함수
+    def get_adjacent_cells(r: int, c: int, board: list[list[int]]):
+        adjacent_cells = []
+        for move in (-1, 1):
+            if r + move in range(0, 4):
+                adjacent_cells.append([r + move, c])
+            if c + move in range(0, 4):
+                adjacent_cells.append([r, c + move])
 
-def solution(board, r, c):
-    min_distance = 10**9
-    all_cards = set()
+        for next_r in range(r + 1, 4):
+            if board[next_r][c] > 0 or next_r == 3:
+                adjacent_cells.append([next_r, c])
+                break
+        for next_r in range(r - 1, -1, -1):
+            if board[next_r][c] > 0 or next_r == 0:
+                adjacent_cells.append([next_r, c])
+                break
 
-    for row in board:
-        all_cards.update(row)
-    all_cards.remove(0)
+        for next_c in range(c + 1, 4):
+            if board[r][next_c] > 0 or next_c == 3:
+                adjacent_cells.append([r, next_c])
+                break
+        for next_c in range(c - 1, -1, -1):
+            if board[r][next_c] > 0 or next_c == 0:
+                adjacent_cells.append([r, next_c])
+                break
 
-    card_ordering = list(permutations(list(all_cards)))
+        return adjacent_cells
 
-    for co in card_ordering:
-        current_row, current_col = r, c
+    # 현재 위치 기준으로 다음 탐색할 카드까지의 최단거리 구하기
+    INF = 10**9
+    min_distance = INF
+    for visit_ordering in card_visit_ordering:
         current_board = [row[:] for row in board]
-        distance = 0
+        current_r, current_c = r, c
+        distance_for_current_path = 0
 
-        for target_card in co:
-            # Empty cell to card -
-            if current_board[current_row][current_col] != target_card:
-                # Start with closest card 
-                # ^ The case when start with farther one can be more effective way 
-                new_row, new_col, distance_to_card = get_distance_to_target_card(
-                    current_board, current_row, current_col, target_card)
+        for current_target in visit_ordering:
+            distances = [[INF] * 4 for _ in range(4)]
+            distances[current_r][current_c] = 0
+            cell_to_visit = deque([(current_r, current_c)])
 
-                distance += distance_to_card
-                current_row, current_col = new_row, new_col
+            while cell_to_visit:
+                current_cell = cell_to_visit.popleft()
+                if distances[current_target[0]][current_target[1]] != INF:
+                    distance_for_current_path += distances[current_target[0]
+                                                           ][current_target[1]]
+                    current_r, current_c = current_target
+                    current_board[current_r][current_c] = 0
+                    break
 
-            # Move from Card to Card
-            card_row, card_col, distance_to_card = get_distance_to_target_card(
-                current_board, current_row, current_col, target_card)
+                adjacent_cells = get_adjacent_cells(
+                    current_cell[0],
+                    current_cell[1],
+                    current_board
+                )
+                for next_r, next_c in adjacent_cells:
+                    if distances[next_r][next_c] != INF:
+                        continue
 
-            distance += distance_to_card
-            current_board[current_row][current_col] = 0
-            current_board[card_row][card_col] = 0
-            current_row, current_col = card_row, card_col
-            continue
+                    distances[next_r][next_c] = distances[current_cell[0]
+                                                          ][current_cell[1]] + 1
+                    cell_to_visit.append((next_r, next_c))
 
-        min_distance = min(distance, min_distance)
+        min_distance = min(min_distance, distance_for_current_path)
 
-    return min_distance
+    return min_distance + len(card_deck) * 2
