@@ -6,44 +6,41 @@ from collections import deque
 
 
 def solution(alp, cop, problems):
-    MAX_IDX = 180
     INF = 10**9
 
-    min_time_spent = INF
+    max_alp = max(p[0] for p in problems)
+    max_cop = max(p[1] for p in problems)
 
-    dp = [[INF] * MAX_IDX for _ in range(MAX_IDX)]
-    dp[alp][cop] = 0
+    initial_alp, initial_cop = min(alp, max_alp), min(cop, max_cop)
 
-    alp_cop_to_visit = deque([(alp, cop)])
+    dp = [[INF] * (max_cop + 1) for _ in range(max_alp + 1)]
+    dp[initial_alp][initial_cop] = 0
+
+    alp_cop_to_visit = deque([(initial_alp, initial_cop)])
 
     while alp_cop_to_visit:
         a, c = alp_cop_to_visit.popleft()
-        if a + 1 < MAX_IDX and c < MAX_IDX and dp[a+1][c] > dp[a][c] + 1:
+        if a < max_alp and dp[a+1][c] > dp[a][c] + 1:
             dp[a + 1][c] = dp[a][c] + 1
             alp_cop_to_visit.append((a+1, c))
 
-        if a < MAX_IDX and c + 1 < MAX_IDX and dp[a][c+1] > dp[a][c] + 1:
+        if c < max_cop and dp[a][c+1] > dp[a][c] + 1:
             dp[a][c + 1] = dp[a][c] + 1
             alp_cop_to_visit.append((a, c+1))
 
-        all_problem_solved = True
         for problem in problems:
             alp_req, cop_req, alp_rwd, cop_rwd, time = problem
 
             if alp_req > a or cop_req > c:
-                all_problem_solved = False
                 continue
 
-            if a + alp_rwd >= MAX_IDX or c + cop_rwd >= MAX_IDX:
+            new_alp = min(a + alp_rwd, max_alp)
+            new_cop = min(c + cop_rwd, max_cop)
+
+            if dp[new_alp][new_cop] <= dp[a][c] + time:
                 continue
 
-            if dp[a + alp_rwd][c + cop_rwd] <= dp[a][c] + time:
-                continue
+            dp[new_alp][new_cop] = dp[a][c] + time
+            alp_cop_to_visit.append((new_alp, new_cop))
 
-            dp[a + alp_rwd][c + cop_rwd] = dp[a][c] + time
-            alp_cop_to_visit.append((a + alp_rwd, c + cop_rwd))
-
-        if all_problem_solved:
-            min_time_spent = min(min_time_spent, dp[a][c])
-
-    return min_time_spent
+    return dp[max_alp][max_cop]
