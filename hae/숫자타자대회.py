@@ -16,11 +16,12 @@ GRAPH = {
 
 INF = 10 ** 9
 
+
 def get_distances(number: int) -> list[int]:
     numbers_to_visit = [(0, number)]
     distances = [INF] * 10
     distances[number] = 0
-    
+
     while numbers_to_visit:
         curr_dist, curr_number = hq.heappop(numbers_to_visit)
         if distances[curr_number] < curr_dist:
@@ -33,65 +34,44 @@ def get_distances(number: int) -> list[int]:
 
             distances[next_number] = new_dist
             hq.heappush(numbers_to_visit, (new_dist, next_number))
-    
+
     distances[number] = 1
     return distances
 
-def solution(numbers: str) -> int:
-    min_distance = INF
-    number_idx = -1
-    fingers = [4, 6]
-    distances_by_number = {number: get_distances(number) for number in range(10)}
-    
-    distance_dp = [[[INF] * 10 for _ in range(10)] for _ in range(len(numbers))]
-    
-    cells_to_visit = deque([(number_idx, fingers)])
-    while cells_to_visit:
-        curr_num_idx, curr_fingers = cells_to_visit.popleft()
-        curr_number = int(numbers[curr_num_idx])
-        
-        # print(f"curr_num_idx: {curr_num_idx}, curr_fingers: {curr_fingers}")
-        # print(distance_dp[curr_num_idx][curr_fingers[0]])
-        # print(distance_dp[curr_num_idx][curr_fingers[0]][curr_fingers[1]])
-        
-        new_num_idx = curr_num_idx + 1
-        if new_num_idx == len(numbers):
-            continue
-        
-        new_number = int(numbers[new_num_idx])
-        
-        if new_number in curr_fingers:
-            new_distance = (
-                distance_dp[curr_num_idx][curr_fingers[0]][curr_fingers[1]]
-                if curr_num_idx >= 0
-                else 0
-            ) + 1
-            
-            if distance_dp[new_num_idx][curr_fingers[0]][curr_fingers[1]] <= new_distance:
-                continue
-            
-            distance_dp[new_num_idx][curr_fingers[0]][curr_fingers[1]] = new_distance
-            cells_to_visit.append((new_num_idx, curr_fingers))
-            continue
-        
-        for finger_idx, finger in enumerate(curr_fingers):
-            new_distance = distances_by_number[finger][new_number] + (
-                distance_dp[curr_num_idx][curr_fingers[0]][curr_fingers[1]]
-                if curr_num_idx >= 0
-                else 0
-            )
-            
-            new_fingers = curr_fingers[:]
-            new_fingers[finger_idx] = new_number
-            new_fingers.sort()
 
-            if distance_dp[new_num_idx][new_fingers[0]][new_fingers[1]] <= new_distance:
+def solution(numbers: str) -> int:
+    INF = 10 ** 9
+    distances_by_number = {number: get_distances(
+        number) for number in range(10)}
+
+    # fingers: distance
+    distance_dp = {(4, 6): 0}
+
+    for curr_number_str in numbers:
+        curr_number = int(curr_number_str)
+        new_distance_dp = {}
+        for curr_fingers, distance in distance_dp.items():
+            if curr_number in curr_fingers:
+                new_distance_dp[curr_fingers] = min(
+                    distance_dp[curr_fingers] + 1,
+                    new_distance_dp.get(curr_fingers, INF)
+                )
                 continue
-            
-            distance_dp[new_num_idx][new_fingers[0]][new_fingers[1]] = new_distance
-            cells_to_visit.append((new_num_idx, new_fingers))
-    
-    return min([cell for row in distance_dp[len(numbers) - 1] for cell in row])
-            
-            
-            
+
+            for finger_idx, finger in enumerate(curr_fingers):
+                finger_to_number = distances_by_number[finger][curr_number]
+                new_distance = distance_dp[curr_fingers] + finger_to_number
+
+                new_fingers = tuple([
+                    f if f_idx != finger_idx
+                    else curr_number
+                    for f_idx, f in enumerate(curr_fingers)
+                ])
+
+                if new_distance >= new_distance_dp.get(new_fingers, INF):
+                    continue
+
+                new_distance_dp[new_fingers] = new_distance
+        distance_dp = new_distance_dp
+
+    return min(distance_dp.values())
