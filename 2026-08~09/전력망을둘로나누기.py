@@ -31,8 +31,8 @@ def solution(n: int, wires: list[list[int]]) -> int:
 
         if not is_unioned:
             continue
-        pivot_root = parents[1]
-        # print(parents)
+        pivot_root = _find(1)
+
         group_size = len(
             [node for node in parents if _find(node) == pivot_root])
         min_group_size_diff = min(min_group_size_diff, abs(n - 2 * group_size))
