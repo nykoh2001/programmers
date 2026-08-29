@@ -1,35 +1,28 @@
 #include <string>
 #include <vector>
-#include <set>
-#include <iostream>
+#include <algorithm>
 
 using namespace std;
 
 /*
 9:35 ~ 9:46 - 100/100, 50/100 => 91.7 / 100.0
+9:52 ~ 10:05 - map (중단)
+10:05 ~ 10:08 - sort
 */
 
-bool solution(vector<string> phone_book) {
-    vector<set<string>> prefix_set_list;
-    
-    for (string phone_number: phone_book) {
-        set<string> prefix_set;
-        for (int char_idx = 0; char_idx < phone_number.size(); char_idx++) {
-            prefix_set.insert(phone_number.substr(0, char_idx + 1));
-        }
-        prefix_set_list.push_back(prefix_set);
+bool solution(vector<string> phone_book)
+{
+  sort(phone_book.begin(), phone_book.end());
+
+  for (int phone_idx = 0; phone_idx < phone_book.size() - 1; phone_idx++)
+  {
+    string current = phone_book[phone_idx];
+    string next = phone_book[phone_idx + 1];
+
+    if (next.size() >= current.size() && next.compare(0, current.size(), current) == 0)
+    {
+      return false;
     }
-    
-    for (int phone_idx = 0; phone_idx < phone_book.size(); phone_idx++) {
-        string phone_number = phone_book[phone_idx];
-        for (int prefix_idx = 0; prefix_idx < phone_book.size(); prefix_idx++) {
-            if (prefix_idx == phone_idx) {
-                 continue;
-            }
-            if (prefix_set_list[prefix_idx].contains(phone_number)) {
-                return false;
-            }
-        }
-    }
-    return true;
+  }
+  return true;
 }
