@@ -25,7 +25,7 @@ vector<int> solution(vector<int> progresses, vector<int> speeds) {
         queued_prog.pop();
         int remaining_prog = MAX_PROGRESS - curr_prog;
         
-        float days_until_deploy = remaining_prog / speeds[curr_prog_idx];
+        float days_until_deploy = float(remaining_prog) / speeds[curr_prog_idx];
         if (int(days_until_deploy) < days_until_deploy) {
             days_until_deploy = int(days_until_deploy) + 1;
         }
